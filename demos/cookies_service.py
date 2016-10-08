@@ -1,7 +1,5 @@
 # coding=UTF-8
 from datetime import time
-QUIT = False
-LIMIT = 10000000
 
 
 def check_token(conn, token):
