@@ -26,6 +26,7 @@ def update_token(conn, token, user, item=None):
     if item:
         conn.zadd('viewed:' + token, item, timestamp)
         conn.zremrangebyrank('viewed:' + token, 0, -26)
+        conn.zincrby('viewed:', item, -1) # ?? 浏览量
 
 
 def clean_sessions(conn):
