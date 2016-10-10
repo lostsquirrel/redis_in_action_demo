@@ -1,22 +1,19 @@
 # coding=UTF-8
 
 # import redis
-from datetime import time
+# from datetime import time
+import time
 
 ONE_DAY_IN_SECONDS = 86400
 ONE_WEEK_IN_SECONDS = 7 * ONE_DAY_IN_SECONDS
 VOTE_LIMIT_PER_DAY = 200  # 前一天有200票，才能与后一个新贴有相同权限
 VOTE_SCORE = 86400 / VOTE_LIMIT_PER_DAY
-HOST = "192.168.1.139"
 ARTICLES_PER_PAGE = 25
-
-
-# conn = redis.Redis(HOST)
 
 
 def article_vote(conn, user, article):
     """
-     对文章评价
+     对文章评价, 只能平价一周内发布的文章
     :param conn:
     :param user:
     :param article:
@@ -24,13 +21,15 @@ def article_vote(conn, user, article):
     """
     cutoff = time.time() - ONE_WEEK_IN_SECONDS
     if conn.zscore('time:', article) < cutoff:
-        return
+        return -1
 
     article_id = article.partition(':')[-1]
 
     if conn.sadd('voted:' + article_id, user):
         conn.zincrby('score:', article, VOTE_SCORE)
-        conn.hincrby(article, 'votes', 1)
+        return conn.hincrby(article, 'votes', 1)
+    else:
+        return -2
 
 
 def post_article(conn, user, title, link):
@@ -50,6 +49,7 @@ def post_article(conn, user, title, link):
 
     now = time.time()
     article = 'article:' + article_id
+    link = r'#' + article_id
     conn.hmset(article, {
         'title': title,
         'link': link,
@@ -93,7 +93,7 @@ def add_groups(conn, article_id, to_add=()):
     """
     article = 'article:' + article_id
     for group in to_add:
-        conn.sadd('group:' + group, article)
+        conn.sadd('group:' + group.strip(), article)
 
 
 def remove_groups(conn, article_id, to_remove=()):
@@ -106,7 +106,7 @@ def remove_groups(conn, article_id, to_remove=()):
     """
     article = 'article:' + article_id
     for group in to_remove:
-        conn.srem('group:' + group, article)
+        conn.srem('group:' + group.strip(), article)
 
 
 def get_group_articles(conn, group, page, order='score:'):
@@ -126,6 +126,10 @@ def get_group_articles(conn, group, page, order='score:'):
                          )
         conn.expire(key, 60)
     return get_articles(conn, page, key)
+
+
+def get_groups(conn):
+    return conn.keys('group:*')
 
 
 '''
