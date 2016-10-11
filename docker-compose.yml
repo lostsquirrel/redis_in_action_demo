@@ -1,4 +1,4 @@
-version: 'beta_0.1.0'
+version: '1.0'
 services:
   blog_python:
     build: .
