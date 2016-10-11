@@ -3,4 +3,4 @@ ADD . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
 EXPOSE 8888
-CMD ["python", 'server.py]
+CMD ["python", "server.py"]
