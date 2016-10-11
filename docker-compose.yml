@@ -1,0 +1,9 @@
+version: 'beta_0.1.0'
+services:
+  blog_python:
+    build: .
+    ports:
+     - "8888:8888"
+    volumes:
+     - .:/code
+
